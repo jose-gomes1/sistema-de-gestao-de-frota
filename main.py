@@ -9,8 +9,8 @@ def main():
 
     f.adicionar_veiculo(c1)
     f.adicionar_veiculo(c2)
-    print(f"Desconto {c1.marca}:", f.desconto(c1.preco))
-    print(f"Desconto {c2.marca}:", f.desconto(c2.preco))
+    print(f"Desconto {c1.marca}:", f.desconto(c1))
+    print(f"Desconto {c2.marca}:", f.desconto(c2))
 
     f.criarFicheiro()
 

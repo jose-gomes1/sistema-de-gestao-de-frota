@@ -33,8 +33,13 @@ class Frota:
                 writer.writerow([v.marca, v.preco, v.vel, v.combustivel])
 
     @log_operacao
-    def desconto(self, preco):
-        return preco * 0.1
+    def desconto(self, carro, percentagem=0.1):
+        for v in self.veiculos:
+            if v.marca == carro.marca and v.preco == carro.preco:
+                v.preco *= (1 - percentagem)
+                return v.preco
+        print("Carro não pertence à frota.")
+        return None
 
     @log_operacao
     def filtrar_por_marca(self, marca):
