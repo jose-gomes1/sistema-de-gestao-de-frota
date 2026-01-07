@@ -29,11 +29,3 @@ O main.py contém exemplos de:
     Aplicação de descontos
     Criação do ficheiro CSV
     Filtragem por marca e impressão de veículos
-
-# Detalhes técnicos
-    Carro herda de Veiculo e adiciona velocidade (vel) e tipo de combustível (combustivel)
-    Frota mantém uma lista de veículos (self.veiculos)
-    desconto() aplica diretamente o desconto sobre o preço do carro
-    criarFicheiro() utiliza csv.writer para criar ou atualizar o ficheiro CSV
-    filtrar_por_marca() retorna uma lista de veículos que correspondem à marca
-    log_operacao é um decorator que imprime timestamp e operação executada
