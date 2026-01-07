@@ -8,20 +8,6 @@ Este projeto é um sistema simples de gestão de veículos e frotas, escrito em 
 - Persistência de dados em ficheiro CSV  
 - Logging de operações com timestamps  
 
----
-
-## Estrutura do projeto
-
-sistema-de-gestao-de-frota/
-│
-├── main.py # Ponto de entrada do programa
-├── frota.py # Classe Frota e métodos relacionados
-├── veiculo.py # Classe base Veículo
-├── carro.py # Classe Carro (herda de Veículo)
-├── decorators.py # Decorators (logging)
-├── frota.csv # Ficheiro CSV com a frota (gerado automaticamente)
-└── README.md # Este ficheiro
-
 
 ---
 
