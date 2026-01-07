@@ -3,8 +3,8 @@ from carro import Carro
 
 def main():
     f = Frota()
-    c1 = Carro("BMW", 30000, 240, "Gasolina")
-    c2 = Carro("Audi", 28000, 230, "Diesel")
+    c1 = Carro("BMW", 50000, 240, "Gasolina")
+    c2 = Carro("Audi", 24000, 230, "Gasóleo")
 
 
     f.adicionar_veiculo(c1)
@@ -12,8 +12,10 @@ def main():
     print(f"Desconto {c1.marca}:", f.desconto(c1.preco))
     print(f"Desconto {c2.marca}:", f.desconto(c2.preco))
 
-    print(f.filtrar_por_marca("BMW"))
     f.criarFicheiro()
+
+    for carro in f.filtrar_por_marca("BMW"):
+        print(carro)
 
 if __name__ == "__main__":
     main()
