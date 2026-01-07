@@ -10,7 +10,7 @@ class Frota:
     @log_operacao
     def load(self, file):
         try:
-            with open(file, newline="", encoding="utf-8") as f:
+            with open(file, newline="") as f:
                 reader = csv.reader(f)
                 for linha in reader:
                     if len(linha) == 4:
