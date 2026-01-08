@@ -1,5 +1,6 @@
 import csv
 from carro import Carro
+from mota import Mota
 from decorators import log_operacao
 
 class Frota:
@@ -9,17 +10,23 @@ class Frota:
 
     @log_operacao
     def load(self, file):
-        try:
-            with open(file, newline="") as f:
-                reader = csv.reader(f)
-                for linha in reader:
-                    if len(linha) == 4:
-                        marca, preco, vel, combustivel = linha
-                        carro = Carro(marca, float(preco), int(vel), combustivel)
-                        self.veiculos.append(carro)
-        except FileNotFoundError:
-            pass
+            try:
+                with open(file, newline="", encoding="utf-8") as f:
+                    reader = csv.reader(f)
+                    for linha in reader:
+                        if len(linha) == 6:
+                            tipo, marca, modelo, preco, vel, combustivel, cor = linha
 
+                            if tipo == "Carro":
+                                v = Carro(marca, modelo, float(preco), int(vel), combustivel, cor)
+                            elif tipo == "Mota":
+                                v = Mota(marca, modelo, float(preco), int(vel), combustivel, cor)
+                            else:
+                                continue
+
+                            self.veiculos.append(v)
+            except FileNotFoundError:
+                pass
 
     @log_operacao
     def adicionar_veiculo(self, v):
@@ -37,8 +44,9 @@ class Frota:
         with open(nome_ficheiro, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             for v in self.veiculos:
-                writer.writerow([v.marca, v.preco, v.vel, v.combustivel])
-
+                writer.writerow([
+                    v.tipo, v.marca, v.modelo ,v.preco, v.vel, v.combustivel, v.cor
+                ])
 
     @log_operacao
     def desconto(self, carro, percentagem=0.1):
