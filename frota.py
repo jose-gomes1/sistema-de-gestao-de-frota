@@ -26,11 +26,19 @@ class Frota:
         self.veiculos.append(v)
 
     @log_operacao
+    def remover_veiculo(self, carro):
+        if carro in self.veiculos:
+            self.veiculos.remove(carro)
+            return True
+        return False
+
+    @log_operacao
     def criarFicheiro(self, nome_ficheiro="frota.csv"):
         with open(nome_ficheiro, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             for v in self.veiculos:
                 writer.writerow([v.marca, v.preco, v.vel, v.combustivel])
+
 
     @log_operacao
     def desconto(self, carro, percentagem=0.1):
