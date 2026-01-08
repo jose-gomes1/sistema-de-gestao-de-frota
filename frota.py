@@ -10,23 +10,24 @@ class Frota:
 
     @log_operacao
     def load(self, file):
-            try:
-                with open(file, newline="", encoding="utf-8") as f:
-                    reader = csv.reader(f)
-                    for linha in reader:
-                        if len(linha) == 6:
-                            tipo, marca, modelo, preco, vel, combustivel, cor = linha
+        try:
+            with open(file, newline="", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                for linha in reader:
+                    if len(linha) == 7:  # <--- aqui deve ser 7
+                        tipo, marca, modelo, preco, vel, combustivel, cor = linha
 
-                            if tipo == "Carro":
-                                v = Carro(marca, modelo, float(preco), int(vel), combustivel, cor)
-                            elif tipo == "Mota":
-                                v = Mota(marca, modelo, float(preco), int(vel), combustivel, cor)
-                            else:
-                                continue
+                        if tipo == "Carro":
+                            v = Carro(marca, modelo, float(preco), int(vel), combustivel, cor)
+                        elif tipo == "Mota":
+                            v = Mota(marca, modelo, float(preco), int(vel), combustivel, cor)
+                        else:
+                            continue
 
-                            self.veiculos.append(v)
-            except FileNotFoundError:
-                pass
+                        self.veiculos.append(v)
+        except FileNotFoundError:
+            pass
+
 
     @log_operacao
     def adicionar_veiculo(self, v):

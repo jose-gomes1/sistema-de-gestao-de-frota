@@ -30,8 +30,10 @@ class FrotaGUI(QWidget):
         self.preco_input.setPlaceholderText("Preço")
         self.vel_input = QLineEdit()
         self.vel_input.setPlaceholderText("Velocidade")
-        self.comb_input = QLineEdit()
-        self.comb_input.setPlaceholderText("Combustível")
+        self.comb_input = QComboBox()
+        self.comb_input.addItems(["Gasolina", "Gasóleo"])
+        self.marca_filtro_input = QLineEdit()
+        self.marca_filtro_input.setPlaceholderText("Filtrar por marca")
         # Botões
         btn_add = QPushButton("Adicionar Veículo")
         btn_add.clicked.connect(self.adicionar)
@@ -44,6 +46,9 @@ class FrotaGUI(QWidget):
         btn_remover.clicked.connect(self.remover)
         # Lista
         self.lista = QListWidget()
+        #Filtro
+        btn_filtrar = QPushButton("Filtrar")
+        btn_filtrar.clicked.connect(self.filtrar_por_marca_gui)
         # Layout
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Novo veículo"))
@@ -59,6 +64,8 @@ class FrotaGUI(QWidget):
         layout.addWidget(btn_remover)
         layout.addWidget(QLabel("Frota"))
         layout.addWidget(self.lista)
+        layout.addWidget(self.marca_filtro_input)   
+        layout.addWidget(btn_filtrar)
         self.setLayout(layout)
 
     def carregar_lista(self):
@@ -76,7 +83,7 @@ class FrotaGUI(QWidget):
             modelo = self.modelo_input.text()
             preco = float(self.preco_input.text())
             vel = int(self.vel_input.text())
-            combustivel = self.comb_input.text()
+            combustivel = self.comb_input.currentText()
             if tipo == "Carro":
                 v = Carro(marca, modelo, preco, vel, combustivel, self.cor)
             else:
@@ -123,12 +130,29 @@ class FrotaGUI(QWidget):
             self.frota.criarFicheiro()
             self.carregar_lista()
 
+    def filtrar_por_marca_gui(self):
+        marca = self.marca_filtro_input.text().strip()
+        if not marca:
+            # Se vazio, mostra toda a frota
+            self.carregar_lista()
+            return
+
+        # Usa o método da classe Frota
+        veiculos_filtrados = self.frota.filtrar_por_marca(marca)
+
+        # Atualiza a lista
+        self.lista.clear()
+        for v in veiculos_filtrados:
+            texto = f"{v.tipo} | {v.marca} {v.modelo} | {v.preco:.2f}€ | {v.vel}km/h | {v.combustivel} | {v.cor}"
+            item = QListWidgetItem(texto)
+            item.setBackground(QColor(v.cor))
+            self.lista.addItem(item)
+
     def limpar_campos(self):
         self.marca_input.clear()
         self.modelo_input.clear()
         self.preco_input.clear()
         self.vel_input.clear()
-        self.comb_input.clear()
         self.cor = "#FFFFFF"
         self.cor_btn.setStyleSheet("")
 
