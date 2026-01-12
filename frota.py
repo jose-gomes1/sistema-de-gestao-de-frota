@@ -14,19 +14,33 @@ class Frota:
             with open(file, newline="", encoding="utf-8") as f:
                 reader = csv.reader(f)
                 for linha in reader:
-                    if len(linha) == 7:  # <--- aqui deve ser 7
-                        tipo, marca, modelo, preco, vel, combustivel, cor = linha
+                    tipo = linha[0]
 
-                        if tipo == "Carro":
+                    if tipo == "Carro":
+                        if len(linha) == 9:
+                            _, marca, modelo, preco, vel, combustivel, cor, eletrico, consumo = linha
+                            v = Carro(
+                                marca, modelo, float(preco), int(vel),
+                                combustivel, cor,
+                                eletrico=eletrico == "True",
+                                consumo_kwh=float(consumo)
+                            )
+                        elif len(linha) == 7:
+                            _, marca, modelo, preco, vel, combustivel, cor = linha
                             v = Carro(marca, modelo, float(preco), int(vel), combustivel, cor)
-                        elif tipo == "Mota":
-                            v = Mota(marca, modelo, float(preco), int(vel), combustivel, cor)
                         else:
                             continue
 
-                        self.veiculos.append(v)
+                    elif tipo == "Mota" and len(linha) == 7:
+                        _, marca, modelo, preco, vel, combustivel, cor = linha
+                        v = Mota(marca, modelo, float(preco), int(vel), combustivel, cor)
+                    else:
+                        continue
+
+                    self.veiculos.append(v)
         except FileNotFoundError:
             pass
+
 
 
     @log_operacao
@@ -45,18 +59,33 @@ class Frota:
         with open(nome_ficheiro, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             for v in self.veiculos:
-                writer.writerow([
-                    v.tipo, v.marca, v.modelo ,v.preco, v.vel, v.combustivel, v.cor
-                ])
+                if isinstance(v, Carro) and v.eletrico:
+                    writer.writerow([
+                        v.tipo, v.marca, v.modelo, v.preco_base,
+                        v.vel, v.combustivel, v.cor,
+                        v.eletrico, v.consumo_kwh
+                    ])
+                else:
+                    writer.writerow([
+                        v.tipo, v.marca, v.modelo, v.preco_base,
+                        v.vel, v.combustivel, v.cor
+                    ])
 
     @log_operacao
     def desconto(self, carro, percentagem=0.1):
         for v in self.veiculos:
-            if v.marca == carro.marca and v.preco == carro.preco:
-                v.preco *= (1 - percentagem)
+            if v is carro:
+                if not v.com_iva:
+                    v.preco = v.preco_base * (1 - percentagem)
+                    v.com_iva = True
+                else:
+                    v.preco = v.preco_base
+                    v.com_iva = False
                 return v.preco
-        print("Carro não pertence à frota.")
+
+        print("Veículo não pertence à frota.")
         return None
+
 
     @log_operacao
     def filtrar_por_marca(self, marca):
