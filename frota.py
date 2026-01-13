@@ -14,6 +14,9 @@ class Frota:
             with open(file, newline="", encoding="utf-8") as f:
                 reader = csv.reader(f)
                 for linha in reader:
+                    if not linha:
+                        continue  # 🔥 evita crash
+
                     tipo = linha[0]
 
                     if tipo == "Carro":
@@ -31,16 +34,21 @@ class Frota:
                         else:
                             continue
 
-                    elif tipo == "Mota" and len(linha) == 7:
-                        _, marca, modelo, preco, vel, combustivel, cor = linha
-                        v = Mota(marca, modelo, float(preco), int(vel), combustivel, cor)
+                    elif tipo == "Mota":
+                        if len(linha) == 8:
+                            _, marca, modelo, preco, vel, combustivel, cor, cilindrada = linha
+                            v = Mota(
+                                marca, modelo, float(preco), int(vel),
+                                combustivel, cor, int(cilindrada)
+                            )
+                        else:
+                            continue
                     else:
                         continue
 
                     self.veiculos.append(v)
         except FileNotFoundError:
             pass
-
 
 
     @log_operacao
@@ -64,6 +72,12 @@ class Frota:
                         v.tipo, v.marca, v.modelo, v.preco_base,
                         v.vel, v.combustivel, v.cor,
                         v.eletrico, v.consumo_kwh
+                    ])
+                elif isinstance(v, Mota):
+                    writer.writerow([
+                        v.tipo, v.marca, v.modelo, v.preco_base,
+                        v.vel, v.combustivel, v.cor,
+                        v.cilindrada
                     ])
                 else:
                     writer.writerow([

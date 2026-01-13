@@ -38,6 +38,11 @@ class FrotaGUI(QWidget):
         self.comb_input = QComboBox()
         self.comb_input.addItems(["Gasolina", "Gasóleo"])
 
+        # Motas
+        self.cilindrada_input = QLineEdit()
+        self.cilindrada_input.setPlaceholderText("Cilindrada (cc)")
+        self.cilindrada_input.hide()
+
         # Carros elétricos
         self.eletrico_check = QCheckBox("Elétrico")
         self.eletrico_check.stateChanged.connect(self.toggle_consumo)
@@ -78,6 +83,7 @@ class FrotaGUI(QWidget):
         layout.addWidget(self.modelo_input)
         layout.addWidget(self.preco_input)
         layout.addWidget(self.vel_input)
+        layout.addWidget(self.cilindrada_input)
         layout.addWidget(self.comb_input)
         layout.addWidget(self.eletrico_check)
         layout.addWidget(self.consumo_input)
@@ -96,10 +102,13 @@ class FrotaGUI(QWidget):
     def atualizar_campos_tipo(self, tipo):
         if tipo == "Carro":
             self.eletrico_check.show()
-        else:
+            self.cilindrada_input.hide()
+            self.cilindrada_input.clear()
+        elif tipo == "Mota":
             self.eletrico_check.hide()
             self.consumo_input.hide()
             self.eletrico_check.setChecked(False)
+            self.cilindrada_input.show()
 
     # Mostra/oculta campo de consumo se o carro for elétrico
     def toggle_consumo(self):
@@ -118,13 +127,17 @@ class FrotaGUI(QWidget):
             self.comb_input.addItems(["Gasolina", "Gasóleo"])
             self.comb_input.setEnabled(True)
 
-
     def carregar_lista(self):
         self.lista.clear()
         for v in self.frota.veiculos:
             texto = f"{v.tipo} | {v.marca} | {v.preco:.2f}€ | {v.vel}km/h | {v.combustivel} | {v.cor}"
+
             if isinstance(v, Carro) and getattr(v, "eletrico", False):
                 texto += f" | Elétrico | {v.consumo_kwh} kWh/100km"
+
+            if isinstance(v, Mota):
+                texto += f" | {v.cilindrada} cc"
+
             item = QListWidgetItem(texto)
             item.setBackground(QColor(v.cor))
             self.lista.addItem(item)
@@ -147,9 +160,9 @@ class FrotaGUI(QWidget):
                     )
                 else:
                     v = Carro(marca, modelo, preco, vel, combustivel, self.cor)
-            else:
-                v = Mota(marca, modelo, preco, vel, combustivel, self.cor)
-
+            else:  # Mota
+                cilindrada = int(self.cilindrada_input.text())
+                v = Mota(marca, modelo, preco, vel, combustivel, self.cor, cilindrada)
             self.frota.adicionar_veiculo(v)
             self.frota.criarFicheiro()
             self.carregar_lista()
@@ -202,6 +215,8 @@ class FrotaGUI(QWidget):
             texto = f"{v.tipo} | {v.marca} {v.modelo} | {v.preco:.2f}€ | {v.vel}km/h | {v.combustivel} | {v.cor}"
             if isinstance(v, Carro) and getattr(v, "eletrico", False):
                 texto += f" | Elétrico | {v.consumo_kwh} kWh/100km"
+            if isinstance(v, Mota):
+                texto += f" | {v.cilindrada} cc"
             item = QListWidgetItem(texto)
             item.setBackground(QColor(v.cor))
             self.lista.addItem(item)
