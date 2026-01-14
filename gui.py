@@ -231,6 +231,8 @@ class FrotaGUI(QWidget):
         self.eletrico_check.setChecked(False)
         self.consumo_input.clear()
         self.consumo_input.hide()
+        self.cilindrada_input.hide()
+        self.cilindrada_input.clear()
 
 
 if __name__ == "__main__":
