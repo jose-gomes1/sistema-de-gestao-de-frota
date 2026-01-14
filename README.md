@@ -15,6 +15,7 @@ Este projeto é um sistema simples de gestão de veículos e frotas, escrito em 
 
 - Python 3.8+
 - Datetime 6.0
+- PyQt6 6.10.1
 
 ---
 
