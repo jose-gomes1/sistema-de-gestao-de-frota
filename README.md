@@ -22,7 +22,7 @@ Este projeto é um sistema simples de gestão de veículos e frotas, escrito em 
 
 ### Executar o programa
 
-python3 main.py
+python3 gui.py
 
 O main.py contém exemplos de:
     Criação de frota
