@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QColor
 from frota import Frota
+from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
 
@@ -130,7 +131,7 @@ class FrotaGUI(QWidget):
     def carregar_lista(self):
         self.lista.clear()
         for v in self.frota.veiculos:
-            texto = f"{v.tipo} | {v.marca} | {v.preco:.2f}€ | {v.vel}km/h | {v.combustivel} | {v.cor}"
+            texto = f"{v.tipo} | {v.marca} | {v.modelo} | {v.preco:.2f}€ | {v.vel}km/h | {v.combustivel} | {v.cor}"
 
             if isinstance(v, Carro) and getattr(v, "eletrico", False):
                 texto += f" | Elétrico | {v.consumo_kwh} kWh/100km"
@@ -160,9 +161,21 @@ class FrotaGUI(QWidget):
                     )
                 else:
                     v = Carro(marca, modelo, preco, vel, combustivel, self.cor)
-            else:  # Mota
+            elif tipo == "Mota":
                 cilindrada = int(self.cilindrada_input.text())
                 v = Mota(marca, modelo, preco, vel, combustivel, self.cor, cilindrada)
+
+            else:  # Veiculo base
+                v = Veiculo(
+                    tipo="Veiculo",
+                    marca=marca,
+                    modelo=modelo,
+                    preco=preco,
+                    vel=vel,
+                    combustivel=combustivel,
+                    cor=self.cor
+                )
+
             self.frota.adicionar_veiculo(v)
             self.frota.criarFicheiro()
             self.carregar_lista()
