@@ -1,10 +1,7 @@
 from veiculo import Veiculo
 
 class Carro(Veiculo):
-    def __init__(
-        self, marca, modelo, preco, vel, combustivel, cor,
-        eletrico=False, consumo_kwh=None
-    ):
+    def __init__(self, marca, modelo, preco, vel, combustivel, cor, eletrico=False, consumo_kwh=None):
         super().__init__("Carro", marca, modelo, preco, vel, combustivel, cor)
 
         self.eletrico = eletrico           # True / False
