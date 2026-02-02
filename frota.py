@@ -15,7 +15,7 @@ class Frota:
                 reader = csv.reader(f)
                 for linha in reader:
                     if not linha:
-                        continue  # 🔥 evita crash
+                        continue
 
                     tipo = linha[0]
 
