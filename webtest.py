@@ -3,6 +3,7 @@ from frota import Frota
 from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
+from storage import get_conn  # use storage connection directly
 
 st.set_page_config("Gestão de Frota")
 st.title("🚗 Gestão de Frota")
@@ -115,10 +116,11 @@ with tab_frota:
 
                 ecor = st.color_picker("Cor", v["cor"], key=f"cor_{v['id']}")
 
-                # Campos específicos
+                # Campos específicos (dynamic)
                 consumo_edit = None
                 cilindrada_edit = None
-                if v["tipo"] == "Carro" and v["eletrico"]:
+                # Only show kWh if current combustivel is electric
+                if v["tipo"] == "Carro" and ecomb == "Elétrico":
                     consumo_edit = st.number_input(
                         "Consumo kWh/100km", value=v["consumo"] or 0.0, key=f"cons_{v['id']}"
                     )
@@ -132,7 +134,7 @@ with tab_frota:
                     error_msg = None
                     if not emarca.strip() or not emodelo.strip() or epreco <= 0 or evel <= 0:
                         error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
-                    if v["tipo"] == "Carro" and v["eletrico"] and (consumo_edit is None or consumo_edit <= 0):
+                    if v["tipo"] == "Carro" and ecomb == "Elétrico" and (consumo_edit is None or consumo_edit <= 0):
                         error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
                     if v["tipo"] == "Mota" and (cilindrada_edit is None or cilindrada_edit <= 0):
                         error_msg = "❌ Para motos, informe a cilindrada."
@@ -143,9 +145,12 @@ with tab_frota:
                         # -------- UPDATE VEHICLE --------
                         frota.atualizar(v["id"], emarca, emodelo, epreco, evel, ecomb, ecor)
 
-                        conn = frota.get_conn()
-                        if v["tipo"] == "Carro" and v["eletrico"]:
+                        conn = get_conn()
+                        if v["tipo"] == "Carro" and ecomb == "Elétrico":
                             conn.execute("UPDATE veiculos SET consumo=? WHERE id=?", (consumo_edit, v["id"]))
+                        else:
+                            # If combustivel changed from Elétrico, remove consumo
+                            conn.execute("UPDATE veiculos SET consumo=NULL WHERE id=?", (v["id"],))
                         if v["tipo"] == "Mota":
                             conn.execute("UPDATE veiculos SET cilindrada=? WHERE id=?", (cilindrada_edit, v["id"]))
                         conn.commit()
