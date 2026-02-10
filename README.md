@@ -24,7 +24,7 @@ Este projeto é um sistema simples de gestão de veículos e frotas, escrito em 
 
 python3 gui.py
 
-O main.py contém exemplos de:
+O gui.py contém exemplos de:
     Criação de frota
     Adição de veículos
     Aplicação de descontos
