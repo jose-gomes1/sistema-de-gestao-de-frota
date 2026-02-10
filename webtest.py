@@ -18,26 +18,40 @@ tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
 # ================= ADD =================
 with tab_add:
-    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"])
-    marca = st.text_input("Marca")
-    modelo = st.text_input("Modelo")
-    preco = st.number_input("Preço", min_value=0.0)
-    vel = st.number_input("Velocidade", min_value=0)
-    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"])
-    cor = st.color_picker("Cor")
+    # --- Initialize session state for all fields ---
+    if "tipo" not in st.session_state:
+        st.session_state.tipo = "Veículo"
+    if "marca" not in st.session_state:
+        st.session_state.marca = ""
+    if "modelo" not in st.session_state:
+        st.session_state.modelo = ""
+    if "preco" not in st.session_state:
+        st.session_state.preco = 0.0
+    if "vel" not in st.session_state:
+        st.session_state.vel = 0
+    if "combustivel" not in st.session_state:
+        st.session_state.combustivel = "Gasolina"
+    if "cor" not in st.session_state:
+        st.session_state.cor = "#000000"
+    if "eletrico" not in st.session_state:
+        st.session_state.eletrico = False
+    if "consumo" not in st.session_state:
+        st.session_state.consumo = 0.0
+    if "cilindrada" not in st.session_state:
+        st.session_state.cilindrada = 0
 
-    eletrico = False
-    consumo = None
-    cilindrada = None
+    # --- Inputs bound to session state ---
+    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
+    marca = st.text_input("Marca", key="marca")
+    modelo = st.text_input("Modelo", key="modelo")
+    preco = st.number_input("Preço", min_value=0.0, key="preco")
+    vel = st.number_input("Velocidade", min_value=0, key="vel")
+    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="combustivel")
+    cor = st.color_picker("Cor", key="cor")
 
-    if tipo == "Carro":
-        eletrico = st.checkbox("Elétrico")
-        if eletrico:
-            consumo = st.number_input("Consumo kWh/100km", min_value=0.0)
-            combustivel = "Elétrico"  # override automatically
-
-    if tipo == "Mota":
-        cilindrada = st.number_input("Cilindrada", min_value=0)
+    eletrico = st.checkbox("Elétrico", key="eletrico") if tipo == "Carro" else False
+    consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo") if tipo == "Carro" and eletrico else None
+    cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada") if tipo == "Mota" else None
 
     if st.button("Adicionar"):
         # -------- VALIDATION --------
@@ -61,7 +75,21 @@ with tab_add:
                 v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
 
             frota.adicionar_veiculo(v)
+
+            # -------- SUCCESS + CLEAR INPUTS --------
             st.success("✅ Veículo adicionado com sucesso!")
+
+            # Reset session_state fields
+            st.session_state.tipo = "Veículo"
+            st.session_state.marca = ""
+            st.session_state.modelo = ""
+            st.session_state.preco = 0.0
+            st.session_state.vel = 0
+            st.session_state.combustivel = "Gasolina"
+            st.session_state.cor = "#000000"
+            st.session_state.eletrico = False
+            st.session_state.consumo = 0.0
+            st.session_state.cilindrada = 0
 
 # ================= FROTA LIST =================
 with tab_frota:
