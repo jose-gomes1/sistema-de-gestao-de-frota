@@ -41,37 +41,68 @@ with tab_add:
         cilindrada = st.number_input("Cilindrada", min_value=0)
 
     if st.button("Adicionar"):
-        # -------- VALIDATION --------
+        # -------- VALIDATION & ADD --------
         error_msg = None
-        if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
+        if not st.session_state.marca_add.strip() or not st.session_state.modelo_add.strip() or st.session_state.preco_add <= 0 or st.session_state.vel_add <= 0:
             error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
-        if tipo == "Carro" and eletrico and (consumo is None or consumo <= 0):
+        if st.session_state.tipo_add == "Carro" and st.session_state.eletrico_add and st.session_state.consumo_add <= 0:
             error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
-        if tipo == "Mota" and (cilindrada is None or cilindrada <= 0):
+        if st.session_state.tipo_add == "Mota" and st.session_state.cilindrada_add <= 0:
             error_msg = "❌ Para motos, informe a cilindrada."
-
+    
         if error_msg:
             st.error(error_msg)
         else:
             # -------- CREATE VEHICLE --------
-            if tipo == "Carro":
-                v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
-            elif tipo == "Mota":
-                v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
+            if st.session_state.tipo_add == "Carro":
+                v = Carro(
+                    st.session_state.marca_add,
+                    st.session_state.modelo_add,
+                    st.session_state.preco_add,
+                    st.session_state.vel_add,
+                    "Elétrico" if st.session_state.eletrico_add else st.session_state.comb_add,
+                    st.session_state.cor_add,
+                    st.session_state.eletrico_add,
+                    st.session_state.consumo_add if st.session_state.eletrico_add else None
+                )
+            elif st.session_state.tipo_add == "Mota":
+                v = Mota(
+                    st.session_state.marca_add,
+                    st.session_state.modelo_add,
+                    st.session_state.preco_add,
+                    st.session_state.vel_add,
+                    st.session_state.comb_add,
+                    st.session_state.cor_add,
+                    st.session_state.cilindrada_add
+                )
             else:
-                v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
-
+                v = Veiculo(
+                    st.session_state.tipo_add,
+                    st.session_state.marca_add,
+                    st.session_state.modelo_add,
+                    st.session_state.preco_add,
+                    st.session_state.vel_add,
+                    st.session_state.comb_add,
+                    st.session_state.cor_add
+                )
+    
             frota.adicionar_veiculo(v)
-            # After adding vehicle
-            st.success("✅ Veículo adicionado com sucesso!")
-            
-            # --- Show blocking JS alert ---
+    
+            # --- Show blocking alert ---
             st.components.v1.html("""
             <script>
                 alert("✅ Veículo adicionado com sucesso!");
             </script>
             """, height=0)
+    
+            # -------- CLEAR INPUTS --------
+            for key in ["marca_add","modelo_add","preco_add","vel_add","comb_add","cor_add","eletrico_add","consumo_add","cilindrada_add","tipo_add"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+    
+            # Optionally rerun to reset form
             st.rerun()
+
 # ================= FROTA LIST =================
 with tab_frota:
     marca_filtro = st.text_input("Filtrar por marca")
