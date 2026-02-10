@@ -3,9 +3,21 @@ from frota import Frota
 from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
-from storage import get_conn
+from storage import get_conn  # use storage connection directly
 
-# Rerun function for modern Streamlit
+st.set_page_config("Gestão de Frota")
+st.title("🚗 Gestão de Frota")
+
+# ---------------- FROTA ----------------
+@st.cache_resource
+def get_frota():
+    return Frota()
+
+frota = get_frota()
+
+tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
+
+# ================= ADD =================
 def rerun():
     from streamlit.runtime.scriptrunner import RerunException, get_script_run_ctx
     raise RerunException(get_script_run_ctx())
@@ -82,7 +94,7 @@ with tab_add:
             st.session_state.consumo = 0.0
             st.session_state.cilindrada = 0
 
-            rerun()  # safe rerun for modern Streamlit
+            rerun()
 
 # ================= FROTA LIST =================
 with tab_frota:
