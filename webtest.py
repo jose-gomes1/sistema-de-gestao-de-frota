@@ -4,184 +4,103 @@ from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
 
-st.set_page_config(page_title="Gestão de Frota", layout="centered")
+st.set_page_config("Gestão de Frota")
 st.title("🚗 Gestão de Frota")
 
-# -----------------------------
-# STATE (load only once)
-# -----------------------------
-if "frota" not in st.session_state:
-    st.session_state.frota = Frota()
-    st.session_state.cor = "#FFFFFF"
+# ---------------- FROTA ----------------
+@st.cache_resource
+def get_frota():
+    return Frota()
 
-frota = st.session_state.frota
+frota = get_frota()
 
-# =============================
-# TABS
-# =============================
-tab_add, tab_frota = st.tabs(["➕ Adicionar veículo", "📋 Frota"])
+tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
-# =====================================================
-# TAB 1 — ADD VEHICLE
-# =====================================================
+# ================= ADD =================
 with tab_add:
-    st.header("Novo veículo")
+    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"])
+    marca = st.text_input("Marca")
+    modelo = st.text_input("Modelo")
+    preco = st.number_input("Preço", min_value=0.0)
+    vel = st.number_input("Velocidade", min_value=0)
+    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"])
+    cor = st.color_picker("Cor")
 
-    tipo = st.selectbox(
-        "Tipo",
-        ["Veiculo", "Carro", "Mota"],
-        key="tipo"
-    )
-
-    marca = st.text_input("Marca", key="marca_add")
-    modelo = st.text_input("Modelo", key="modelo_add")
-    preco = st.number_input("Preço (€)", min_value=0.0, step=0.1, key="preco_add")
-    vel = st.number_input("Velocidade (km/h)", min_value=0, step=1, key="vel_add")
-
-    combustivel = st.selectbox(
-        "Combustível",
-        ["Gasolina", "Gasóleo"],
-        key="comb_add"
-    )
-
-    # ---- Carro elétrico
     eletrico = False
     consumo = None
+    cilindrada = None
 
     if tipo == "Carro":
-        eletrico = st.checkbox("Elétrico", key="eletrico_check")
+        eletrico = st.checkbox("Elétrico")
         if eletrico:
-            consumo = st.number_input(
-                "Consumo (kWh/100km)",
-                min_value=0.0,
-                step=0.1,
-                key="consumo_add"
-            )
-            combustivel = "Elétrico"
+            consumo = st.number_input("Consumo kWh/100km", min_value=0.0)
+            combustivel = "Elétrico"  # override combustível automaticamente
 
-    # ---- Mota
-    cilindrada = None
     if tipo == "Mota":
-        cilindrada = st.number_input(
-            "Cilindrada (cc)",
-            min_value=0,
-            step=50,
-            key="cilindrada_add"
-        )
+        cilindrada = st.number_input("Cilindrada", min_value=0)
 
-    # ---- Color picker
-    st.session_state.cor = st.color_picker(
-        "Cor do veículo",
-        st.session_state.cor,
-        key="cor_picker"
-    )
+    if st.button("Adicionar"):
+        if tipo == "Carro":
+            v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
+        elif tipo == "Mota":
+            v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
+        else:
+            v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
 
-    if st.button("Adicionar veículo", key="btn_add"):
-        try:
-            if tipo == "Carro":
-                v = Carro(
-                    marca, modelo, preco, vel, combustivel, st.session_state.cor,
-                    eletrico=eletrico,
-                    consumo_kwh=consumo
-                )
-            elif tipo == "Mota":
-                v = Mota(
-                    marca, modelo, preco, vel, combustivel,
-                    st.session_state.cor, cilindrada
-                )
-            else:
-                v = Veiculo(
-                    tipo="Veiculo",
-                    marca=marca,
-                    modelo=modelo,
-                    preco=preco,
-                    vel=vel,
-                    combustivel=combustivel,
-                    cor=st.session_state.cor
-                )
+        frota.adicionar_veiculo(v)
+        
+        # ✅ Mostra popup verde
+        st.success("✅ Veículo adicionado com sucesso!")
+        
+        # Atualiza a lista de veículos sem apagar a mensagem
+        # Podemos apenas recarregar os dados
+        rows = frota.listar()
 
-            frota.adicionar_veiculo(v)
-            frota.criarFicheiro()
-            st.success("✅ Veículo adicionado com sucesso!")
-
-        except Exception as e:
-            st.error(f"Erro ao adicionar veículo: {e}")
-
-# =====================================================
-# TAB 2 — FROTA (/frota)
-# =====================================================
+# ================= FROTA LIST =================
 with tab_frota:
-    st.header("Frota")
+    marca_filtro = st.text_input("Filtrar por marca")
+    rows = frota.filtrar_por_marca(marca_filtro) if marca_filtro else frota.listar()
 
-    # -------------------------
-    # FILTER BY BRAND
-    # -------------------------
-    st.subheader("🔍 Filtrar por marca")
+    for v in rows:
+        with st.expander(f"#{v['id']} — {v['marca']} {v['modelo']}"):
+            # --- Vehicle Info ---
+            st.markdown(f"**Preço:** €{v['preco']:.2f} {'(com IVA)' if v['com_iva'] else ''}")
+            st.markdown(f"**Velocidade:** {v['vel']} km/h")
+            st.markdown(f"**Combustível:** {v['combustivel']}")
+            st.markdown(f"**Cor:** {v['cor']}")
+            if v['eletrico']:
+                st.markdown(f"**Consumo:** {v['consumo']} kWh/100km")
+            if v['cilindrada']:
+                st.markdown(f"**Cilindrada:** {v['cilindrada']} cc")
 
-    marca_filtro = st.text_input("Marca", key="marca_filtro")
+            # --- Buttons ---
+            col1, col2, col3 = st.columns([1,1,1])
+            with col1:
+                if st.button("✏️ Editar", key=f"edit_{v['id']}"):
+                    st.session_state.edit_id = v["id"]
+            with col2:
+                if st.button("💸 IVA 10%", key=f"desc_{v['id']}"):
+                    frota.toggle_desconto(v["id"])
+                    st.success("💰 IVA aplicado/removido!")
+                    st.rerun()
+            with col3:
+                if st.button("❌ Remover", key=f"del_{v['id']}"):
+                    frota.remover(v["id"])
+                    st.success("🗑 Veículo removido!")
+                    st.rerun()
 
-    if marca_filtro:
-        veiculos = frota.filtrar_por_marca(marca_filtro)
-    else:
-        veiculos = frota.veiculos
-
-    # -------------------------
-    # LIST VEHICLES
-    # -------------------------
-    if not veiculos:
-        st.info("Nenhum veículo encontrado.")
-    else:
-        for i, v in enumerate(veiculos):
-            texto = f"""
-**{i}** — {v.tipo} | {v.marca} | {v.modelo}  
-💰 {v.preco:.2f}€ | 🚀 {v.vel} km/h | ⛽ {v.combustivel}  
-🎨 {v.cor}
-"""
-            if isinstance(v, Carro) and getattr(v, "eletrico", False):
-                texto += f"\n⚡ Elétrico | {v.consumo_kwh} kWh/100km"
-
-            if isinstance(v, Mota):
-                texto += f"\n🏍 {v.cilindrada} cc"
-
-            st.markdown(texto)
-            st.divider()
-
-    # -------------------------
-    # DISCOUNT
-    # -------------------------
-    st.subheader("💸 Aplicar desconto")
-
-    if frota.veiculos:
-        idx_desc = st.number_input(
-            "Índice do veículo",
-            min_value=0,
-            max_value=len(frota.veiculos) - 1,
-            step=1,
-            key="idx_desc"
-        )
-
-        if st.button("Aplicar desconto 10%", key="btn_desc"):
-            carro = frota.veiculos[int(idx_desc)]
-            frota.desconto(carro, 0.1)
-            frota.criarFicheiro()
-            st.success("Desconto aplicado!")
-
-    # -------------------------
-    # REMOVE VEHICLE
-    # -------------------------
-    st.subheader("❌ Remover veículo")
-
-    if frota.veiculos:
-        idx_remover = st.number_input(
-            "Índice do veículo a remover",
-            min_value=0,
-            max_value=len(frota.veiculos) - 1,
-            step=1,
-            key="idx_remove"
-        )
-
-        if st.button("Remover veículo", key="btn_remove"):
-            v = frota.veiculos[int(idx_remover)]
-            frota.remover_veiculo(v)
-            frota.criarFicheiro()
-            st.success("Veículo removido!")
+            # --- Edit Form ---
+            if st.session_state.get("edit_id") == v["id"]:
+                st.markdown("### ✏️ Editar veículo")
+                emarca = st.text_input("Marca", v["marca"], key=f"m_{v['id']}")
+                emodelo = st.text_input("Modelo", v["modelo"], key=f"mo_{v['id']}")
+                epreco = st.number_input("Preço", value=v["preco"], key=f"p_{v['id']}")
+                evel = st.number_input("Velocidade", value=v["vel"], key=f"v_{v['id']}")
+                ecomb = st.text_input("Combustível", v["combustivel"], key=f"c_{v['id']}")
+                ecor = st.color_picker("Cor", v["cor"], key=f"cor_{v['id']}")
+                
+                if st.button("💾 Guardar", key=f"save_{v['id']}"):
+                    frota.atualizar(v["id"], emarca, emodelo, epreco, evel, ecomb, ecor)
+                    del st.session_state.edit_id
+                    st.success("✅ Veículo atualizado!")
+                    st.rerun()
