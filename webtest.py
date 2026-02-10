@@ -4,7 +4,6 @@ from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
 from storage import get_conn
-
 st.set_page_config("Gestão de Frota")
 st.title("🚗 Gestão de Frota")
 
