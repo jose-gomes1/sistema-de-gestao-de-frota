@@ -19,29 +19,30 @@ tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
 # ================= ADD =================
 with tab_add:
-    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"])
-    marca = st.text_input("Marca")
-    modelo = st.text_input("Modelo")
-    preco = st.number_input("Preço", min_value=0.0)
-    vel = st.number_input("Velocidade", min_value=0)
-    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"])
-    cor = st.color_picker("Cor")
+    # Use session_state to keep values
+    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
+    marca = st.text_input("Marca", key="marca")
+    modelo = st.text_input("Modelo", key="modelo")
+    preco = st.number_input("Preço", min_value=0.0, key="preco")
+    vel = st.number_input("Velocidade", min_value=0, key="vel")
+    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="combustivel")
+    cor = st.color_picker("Cor", key="cor")
 
     eletrico = False
     consumo = None
     cilindrada = None
 
     if tipo == "Carro":
-        eletrico = st.checkbox("Elétrico")
+        eletrico = st.checkbox("Elétrico", key="eletrico")
         if eletrico:
-            consumo = st.number_input("Consumo kWh/100km", min_value=0.0)
-            combustivel = "Elétrico"  # override automatically
+            consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo")
+            combustivel = "Elétrico"
 
     if tipo == "Mota":
-        cilindrada = st.number_input("Cilindrada", min_value=0)
+        cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada")
 
     if st.button("Adicionar"):
-        # -------- VALIDATION --------
+        # VALIDATION
         error_msg = None
         if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
             error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
@@ -53,7 +54,7 @@ with tab_add:
         if error_msg:
             st.error(error_msg)
         else:
-            # -------- CREATE VEHICLE --------
+            # CREATE VEHICLE
             if tipo == "Carro":
                 v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
             elif tipo == "Mota":
@@ -63,6 +64,12 @@ with tab_add:
 
             frota.adicionar_veiculo(v)
             st.success("✅ Veículo adicionado com sucesso!")
+
+            # -------- CLEAR INPUTS --------
+            for key in ["tipo", "marca", "modelo", "preco", "vel", "combustivel", "cor", "eletrico", "consumo", "cilindrada"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.experimental_rerun()
 
 # ================= FROTA LIST =================
 with tab_frota:
