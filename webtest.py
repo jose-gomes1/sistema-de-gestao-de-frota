@@ -34,25 +34,21 @@ with tab_add:
         eletrico = st.checkbox("Elétrico")
         if eletrico:
             consumo = st.number_input("Consumo kWh/100km", min_value=0.0)
-            combustivel = "Elétrico"  # override combustível automaticamente
+            combustivel = "Elétrico"  # override automatically
 
     if tipo == "Mota":
         cilindrada = st.number_input("Cilindrada", min_value=0)
 
     if st.button("Adicionar"):
-    
         # -------- VALIDATION --------
         error_msg = None
-    
         if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
             error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
-        
         if tipo == "Carro" and eletrico and (consumo is None or consumo <= 0):
             error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
-        
         if tipo == "Mota" and (cilindrada is None or cilindrada <= 0):
             error_msg = "❌ Para motos, informe a cilindrada."
-    
+
         if error_msg:
             st.error(error_msg)
         else:
@@ -63,14 +59,9 @@ with tab_add:
                 v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
             else:
                 v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
-    
+
             frota.adicionar_veiculo(v)
             st.success("✅ Veículo adicionado com sucesso!")
-
-        
-        # Atualiza a lista de veículos sem apagar a mensagem
-        # Podemos apenas recarregar os dados
-        rows = frota.listar()
 
 # ================= FROTA LIST =================
 with tab_frota:
@@ -80,13 +71,15 @@ with tab_frota:
     for v in rows:
         with st.expander(f"#{v['id']} — {v['marca']} {v['modelo']}"):
             # --- Vehicle Info ---
-            st.markdown(f"**Preço:** €{v['preco']:.2f} {'(sem IVA)' if v['com_iva'] else ''}")
+            st.markdown(f"**Preço:** €{v['preco']:.2f} {'(com IVA)' if v['com_iva'] else ''}")
             st.markdown(f"**Velocidade:** {v['vel']} km/h")
             st.markdown(f"**Combustível:** {v['combustivel']}")
             st.markdown(f"**Cor:** {v['cor']}")
-            if v['eletrico']:
+
+            # --- Dynamic fields ---
+            if v['tipo'] == "Carro" and v['eletrico']:
                 st.markdown(f"**Consumo:** {v['consumo']} kWh/100km")
-            if v['cilindrada']:
+            if v['tipo'] == "Mota" and v['cilindrada']:
                 st.markdown(f"**Cilindrada:** {v['cilindrada']} cc")
 
             # --- Buttons ---
@@ -112,15 +105,16 @@ with tab_frota:
                 emodelo = st.text_input("Modelo", v["modelo"], key=f"mo_{v['id']}")
                 epreco = st.number_input("Preço", value=v["preco"], key=f"p_{v['id']}")
                 evel = st.number_input("Velocidade", value=v["vel"], key=f"v_{v['id']}")
-                
-                # --- Combustível selectbox with options ---
+
+                # --- Combustível selectbox ---
                 combustivel_options = ["Gasolina", "Gasóleo"]
                 if v["tipo"] == "Carro" and v["eletrico"]:
                     combustivel_options.append("Elétrico")
-                ecomb = st.selectbox("Combustível", options=combustivel_options, index=combustivel_options.index(v["combustivel"]), key=f"c_{v['id']}")
-                
+                ecomb = st.selectbox("Combustível", options=combustivel_options,
+                                     index=combustivel_options.index(v["combustivel"]), key=f"c_{v['id']}")
+
                 ecor = st.color_picker("Cor", v["cor"], key=f"cor_{v['id']}")
-            
+
                 # Campos específicos
                 consumo_edit = None
                 cilindrada_edit = None
@@ -132,7 +126,7 @@ with tab_frota:
                     cilindrada_edit = st.number_input(
                         "Cilindrada (cc)", value=v["cilindrada"] or 0, key=f"cil_{v['id']}"
                     )
-            
+
                 if st.button("💾 Guardar", key=f"save_{v['id']}"):
                     # -------- VALIDATION --------
                     error_msg = None
@@ -142,22 +136,20 @@ with tab_frota:
                         error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
                     if v["tipo"] == "Mota" and (cilindrada_edit is None or cilindrada_edit <= 0):
                         error_msg = "❌ Para motos, informe a cilindrada."
-            
+
                     if error_msg:
                         st.error(error_msg)
                     else:
                         # -------- UPDATE VEHICLE --------
                         frota.atualizar(v["id"], emarca, emodelo, epreco, evel, ecomb, ecor)
-            
-                        # Atualiza campos específicos
+
                         conn = frota.get_conn()
                         if v["tipo"] == "Carro" and v["eletrico"]:
                             conn.execute("UPDATE veiculos SET consumo=? WHERE id=?", (consumo_edit, v["id"]))
                         if v["tipo"] == "Mota":
                             conn.execute("UPDATE veiculos SET cilindrada=? WHERE id=?", (cilindrada_edit, v["id"]))
                         conn.commit()
-            
+
                         del st.session_state.edit_id
                         st.success("✅ Veículo atualizado com sucesso!")
-                    st.rerun()
-
+                        st.rerun()
