@@ -3,23 +3,36 @@ from frota import Frota
 from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
-from storage import get_conn  # use storage connection directly
+from storage import get_conn
 
-st.set_page_config("Gestão de Frota")
-st.title("🚗 Gestão de Frota")
+# Rerun function for modern Streamlit
+def rerun():
+    from streamlit.runtime.scriptrunner import RerunException, get_script_run_ctx
+    raise RerunException(get_script_run_ctx())
 
-# ---------------- FROTA ----------------
-@st.cache_resource
-def get_frota():
-    return Frota()
-
-frota = get_frota()
-
-tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
-
-# ================= ADD =================
 with tab_add:
-    # Use session_state to keep values
+    # Use session_state with default values
+    if "tipo" not in st.session_state:
+        st.session_state.tipo = "Veículo"
+    if "marca" not in st.session_state:
+        st.session_state.marca = ""
+    if "modelo" not in st.session_state:
+        st.session_state.modelo = ""
+    if "preco" not in st.session_state:
+        st.session_state.preco = 0.0
+    if "vel" not in st.session_state:
+        st.session_state.vel = 0
+    if "combustivel" not in st.session_state:
+        st.session_state.combustivel = "Gasolina"
+    if "cor" not in st.session_state:
+        st.session_state.cor = "#000000"
+    if "eletrico" not in st.session_state:
+        st.session_state.eletrico = False
+    if "consumo" not in st.session_state:
+        st.session_state.consumo = 0.0
+    if "cilindrada" not in st.session_state:
+        st.session_state.cilindrada = 0
+
     tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
     marca = st.text_input("Marca", key="marca")
     modelo = st.text_input("Modelo", key="modelo")
@@ -28,18 +41,9 @@ with tab_add:
     combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="combustivel")
     cor = st.color_picker("Cor", key="cor")
 
-    eletrico = False
-    consumo = None
-    cilindrada = None
-
-    if tipo == "Carro":
-        eletrico = st.checkbox("Elétrico", key="eletrico")
-        if eletrico:
-            consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo")
-            combustivel = "Elétrico"
-
-    if tipo == "Mota":
-        cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada")
+    eletrico = st.checkbox("Elétrico", key="eletrico") if tipo == "Carro" else False
+    consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo") if tipo == "Carro" and eletrico else None
+    cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada") if tipo == "Mota" else None
 
     if st.button("Adicionar"):
         # VALIDATION
@@ -56,7 +60,8 @@ with tab_add:
         else:
             # CREATE VEHICLE
             if tipo == "Carro":
-                v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
+                combustivel_final = "Elétrico" if eletrico else combustivel
+                v = Carro(marca, modelo, preco, vel, combustivel_final, cor, eletrico, consumo)
             elif tipo == "Mota":
                 v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
             else:
@@ -66,10 +71,18 @@ with tab_add:
             st.success("✅ Veículo adicionado com sucesso!")
 
             # -------- CLEAR INPUTS --------
-            for key in ["tipo", "marca", "modelo", "preco", "vel", "combustivel", "cor", "eletrico", "consumo", "cilindrada"]:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
+            st.session_state.tipo = "Veículo"
+            st.session_state.marca = ""
+            st.session_state.modelo = ""
+            st.session_state.preco = 0.0
+            st.session_state.vel = 0
+            st.session_state.combustivel = "Gasolina"
+            st.session_state.cor = "#000000"
+            st.session_state.eletrico = False
+            st.session_state.consumo = 0.0
+            st.session_state.cilindrada = 0
+
+            rerun()  # safe rerun for modern Streamlit
 
 # ================= FROTA LIST =================
 with tab_frota:
