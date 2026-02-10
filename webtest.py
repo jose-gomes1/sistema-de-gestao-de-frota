@@ -99,19 +99,44 @@ def adicionar_veiculo_callback():
 
 # ================= ADD TAB =================
 with tab_add:
-    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
-    marca = st.text_input("Marca", key="marca")
-    modelo = st.text_input("Modelo", key="modelo")
-    preco = st.number_input("Preço", min_value=0.0, key="preco")
-    vel = st.number_input("Velocidade", min_value=0, key="vel")
-    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="combustivel")
-    cor = st.color_picker("Cor", key="cor")
+    with st.form("add_vehicle_form", clear_on_submit=True):
+        tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
+        marca = st.text_input("Marca", key="marca")
+        modelo = st.text_input("Modelo", key="modelo")
+        preco = st.number_input("Preço", min_value=0.0, key="preco")
+        vel = st.number_input("Velocidade", min_value=0, key="vel")
+        combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="combustivel")
+        cor = st.color_picker("Cor", key="cor")
 
-    eletrico = st.checkbox("Elétrico", key="eletrico") if tipo == "Carro" else False
-    consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo") if tipo == "Carro" and eletrico else None
-    cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada") if tipo == "Mota" else None
+        eletrico = st.checkbox("Elétrico", key="eletrico") if tipo == "Carro" else False
+        consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo") if tipo == "Carro" and eletrico else None
+        cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada") if tipo == "Mota" else None
 
-    if st.button("Adicionar"):
+        submitted = st.form_submit_button("Adicionar")
+        if submitted:
+            # --- VALIDATION ---
+            error_msg = None
+            if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
+                error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
+            if tipo == "Carro" and eletrico and (consumo is None or consumo <= 0):
+                error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
+            if tipo == "Mota" and (cilindrada is None or cilindrada <= 0):
+                error_msg = "❌ Para motos, informe a cilindrada."
+
+            if error_msg:
+                st.error(error_msg)
+            else:
+                # --- CREATE VEHICLE ---
+                if tipo == "Carro":
+                    v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
+                elif tipo == "Mota":
+                    v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
+                else:
+                    v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
+
+                frota.adicionar_veiculo(v)
+                st.success("✅ Veículo adicionado com sucesso!")
+
         adicionar_veiculo_callback()
 
 # ================= FROTA LIST TAB =================
