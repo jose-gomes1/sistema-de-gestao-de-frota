@@ -98,9 +98,37 @@ with tab_frota:
                 evel = st.number_input("Velocidade", value=v["vel"], key=f"v_{v['id']}")
                 ecomb = st.text_input("Combustível", v["combustivel"], key=f"c_{v['id']}")
                 ecor = st.color_picker("Cor", v["cor"], key=f"cor_{v['id']}")
-                
+            
+                # --- Campos específicos ---
+                if v["tipo"] == "Carro" and v["eletrico"]:
+                    consumo_edit = st.number_input(
+                        "Consumo kWh/100km", value=v["consumo"] or 0.0, key=f"cons_{v['id']}"
+                    )
+                if v["tipo"] == "Mota":
+                    cilindrada_edit = st.number_input(
+                        "Cilindrada (cc)", value=v["cilindrada"] or 0, key=f"cil_{v['id']}"
+                    )
+            
                 if st.button("💾 Guardar", key=f"save_{v['id']}"):
                     frota.atualizar(v["id"], emarca, emodelo, epreco, evel, ecomb, ecor)
+            
+                    # Atualiza campos específicos
+                    if v["tipo"] == "Carro" and v["eletrico"]:
+                        conn = frota.get_conn()
+                        conn.execute(
+                            "UPDATE veiculos SET consumo=? WHERE id=?",
+                            (consumo_edit, v["id"])
+                        )
+                        conn.commit()
+                    if v["tipo"] == "Mota":
+                        conn = frota.get_conn()
+                        conn.execute(
+                            "UPDATE veiculos SET cilindrada=? WHERE id=?",
+                            (cilindrada_edit, v["id"])
+                        )
+                        conn.commit()
+            
                     del st.session_state.edit_id
                     st.success("✅ Veículo atualizado!")
                     st.rerun()
+
