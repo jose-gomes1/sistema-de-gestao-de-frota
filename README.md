@@ -16,6 +16,7 @@ Este projeto é um sistema simples de gestão de veículos e frotas, escrito em 
 - Python 3.8+
 - Datetime 6.0
 - PyQt6 6.10.1
+- Streamlit
 
 ---
 
@@ -24,7 +25,10 @@ Este projeto é um sistema simples de gestão de veículos e frotas, escrito em 
 
 python3 gui.py
 
-O main.py contém exemplos de:
+### Executar web
+streamlit run app.py
+
+O gui.py contém exemplos de:
     Criação de frota
     Adição de veículos
     Aplicação de descontos
