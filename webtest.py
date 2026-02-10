@@ -18,47 +18,30 @@ frota = get_frota()
 tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
 # ================= ADD =================
-def rerun():
-    from streamlit.runtime.scriptrunner import RerunException, get_script_run_ctx
-    raise RerunException(get_script_run_ctx())
-
 with tab_add:
-    # Use session_state with default values
-    if "tipo" not in st.session_state:
-        st.session_state.tipo = "Veículo"
-    if "marca" not in st.session_state:
-        st.session_state.marca = ""
-    if "modelo" not in st.session_state:
-        st.session_state.modelo = ""
-    if "preco" not in st.session_state:
-        st.session_state.preco = 0.0
-    if "vel" not in st.session_state:
-        st.session_state.vel = 0
-    if "combustivel" not in st.session_state:
-        st.session_state.combustivel = "Gasolina"
-    if "cor" not in st.session_state:
-        st.session_state.cor = "#000000"
-    if "eletrico" not in st.session_state:
-        st.session_state.eletrico = False
-    if "consumo" not in st.session_state:
-        st.session_state.consumo = 0.0
-    if "cilindrada" not in st.session_state:
-        st.session_state.cilindrada = 0
+    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"])
+    marca = st.text_input("Marca")
+    modelo = st.text_input("Modelo")
+    preco = st.number_input("Preço", min_value=0.0)
+    vel = st.number_input("Velocidade", min_value=0)
+    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"])
+    cor = st.color_picker("Cor")
 
-    tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
-    marca = st.text_input("Marca", key="marca")
-    modelo = st.text_input("Modelo", key="modelo")
-    preco = st.number_input("Preço", min_value=0.0, key="preco")
-    vel = st.number_input("Velocidade", min_value=0, key="vel")
-    combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="combustivel")
-    cor = st.color_picker("Cor", key="cor")
+    eletrico = False
+    consumo = None
+    cilindrada = None
 
-    eletrico = st.checkbox("Elétrico", key="eletrico") if tipo == "Carro" else False
-    consumo = st.number_input("Consumo kWh/100km", min_value=0.0, key="consumo") if tipo == "Carro" and eletrico else None
-    cilindrada = st.number_input("Cilindrada", min_value=0, key="cilindrada") if tipo == "Mota" else None
+    if tipo == "Carro":
+        eletrico = st.checkbox("Elétrico")
+        if eletrico:
+            consumo = st.number_input("Consumo kWh/100km", min_value=0.0)
+            combustivel = "Elétrico"  # override automatically
+
+    if tipo == "Mota":
+        cilindrada = st.number_input("Cilindrada", min_value=0)
 
     if st.button("Adicionar"):
-        # VALIDATION
+        # -------- VALIDATION --------
         error_msg = None
         if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
             error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
@@ -70,10 +53,9 @@ with tab_add:
         if error_msg:
             st.error(error_msg)
         else:
-            # CREATE VEHICLE
+            # -------- CREATE VEHICLE --------
             if tipo == "Carro":
-                combustivel_final = "Elétrico" if eletrico else combustivel
-                v = Carro(marca, modelo, preco, vel, combustivel_final, cor, eletrico, consumo)
+                v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
             elif tipo == "Mota":
                 v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
             else:
@@ -81,20 +63,6 @@ with tab_add:
 
             frota.adicionar_veiculo(v)
             st.success("✅ Veículo adicionado com sucesso!")
-
-            # -------- CLEAR INPUTS --------
-            st.session_state.tipo = "Veículo"
-            st.session_state.marca = ""
-            st.session_state.modelo = ""
-            st.session_state.preco = 0.0
-            st.session_state.vel = 0
-            st.session_state.combustivel = "Gasolina"
-            st.session_state.cor = "#000000"
-            st.session_state.eletrico = False
-            st.session_state.consumo = 0.0
-            st.session_state.cilindrada = 0
-
-            rerun()
 
 # ================= FROTA LIST =================
 with tab_frota:
