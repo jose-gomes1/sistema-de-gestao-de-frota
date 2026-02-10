@@ -71,8 +71,7 @@ with tab_add:
                 alert("✅ Veículo adicionado com sucesso!");
             </script>
             """, height=0)
-
-
+            st.rerun()
 # ================= FROTA LIST =================
 with tab_frota:
     marca_filtro = st.text_input("Filtrar por marca")
