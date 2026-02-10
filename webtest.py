@@ -7,7 +7,6 @@ from storage import get_conn  # use storage connection directly
 
 st.set_page_config("Gestão de Frota")
 st.title("🚗 Gestão de Frota")
-
 # ---------------- FROTA ----------------
 @st.cache_resource
 def get_frota():
