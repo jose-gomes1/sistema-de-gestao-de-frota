@@ -64,7 +64,7 @@ with tab_frota:
     for v in rows:
         with st.expander(f"#{v['id']} — {v['marca']} {v['modelo']}"):
             # --- Vehicle Info ---
-            st.markdown(f"**Preço:** €{v['preco']:.2f} {'(com IVA)' if v['com_iva'] else ''}")
+            st.markdown(f"**Preço:** €{v['preco']:.2f} {'(sem IVA)' if v['com_iva'] else ''}")
             st.markdown(f"**Velocidade:** {v['vel']} km/h")
             st.markdown(f"**Combustível:** {v['combustivel']}")
             st.markdown(f"**Cor:** {v['cor']}")
