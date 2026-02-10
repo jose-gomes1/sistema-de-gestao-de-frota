@@ -40,17 +40,33 @@ with tab_add:
         cilindrada = st.number_input("Cilindrada", min_value=0)
 
     if st.button("Adicionar"):
-        if tipo == "Carro":
-            v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
-        elif tipo == "Mota":
-            v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
-        else:
-            v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
-
-        frota.adicionar_veiculo(v)
+    
+        # -------- VALIDATION --------
+        error_msg = None
+    
+        if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
+            error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
         
-        # ✅ Mostra popup verde
-        st.success("✅ Veículo adicionado com sucesso!")
+        if tipo == "Carro" and eletrico and (consumo is None or consumo <= 0):
+            error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
+        
+        if tipo == "Mota" and (cilindrada is None or cilindrada <= 0):
+            error_msg = "❌ Para motos, informe a cilindrada."
+    
+        if error_msg:
+            st.error(error_msg)
+        else:
+            # -------- CREATE VEHICLE --------
+            if tipo == "Carro":
+                v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
+            elif tipo == "Mota":
+                v = Mota(marca, modelo, preco, vel, combustivel, cor, cilindrada)
+            else:
+                v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
+    
+            frota.adicionar_veiculo(v)
+            st.success("✅ Veículo adicionado com sucesso!")
+
         
         # Atualiza a lista de veículos sem apagar a mensagem
         # Podemos apenas recarregar os dados
