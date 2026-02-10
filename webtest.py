@@ -99,6 +99,7 @@ def adicionar_veiculo_callback():
 
 # ================= ADD TAB =================
 with tab_add:
+    # form ensures isolation
     with st.form("add_vehicle_form", clear_on_submit=True):
         tipo = st.selectbox("Tipo", ["Veículo", "Carro", "Mota"], key="tipo")
         marca = st.text_input("Marca", key="marca")
@@ -114,19 +115,15 @@ with tab_add:
 
         submitted = st.form_submit_button("Adicionar")
         if submitted:
-            # --- VALIDATION ---
-            error_msg = None
+            # --- validation ---
             if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
-                error_msg = "❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade."
-            if tipo == "Carro" and eletrico and (consumo is None or consumo <= 0):
-                error_msg = "❌ Para carros elétricos, informe o consumo em kWh/100km."
-            if tipo == "Mota" and (cilindrada is None or cilindrada <= 0):
-                error_msg = "❌ Para motos, informe a cilindrada."
-
-            if error_msg:
-                st.error(error_msg)
+                st.error("❌ Preencha todos os campos obrigatórios: marca, modelo, preço, velocidade.")
+            elif tipo == "Carro" and eletrico and (consumo is None or consumo <= 0):
+                st.error("❌ Para carros elétricos, informe o consumo em kWh/100km.")
+            elif tipo == "Mota" and (cilindrada is None or cilindrada <= 0):
+                st.error("❌ Para motos, informe a cilindrada.")
             else:
-                # --- CREATE VEHICLE ---
+                # create vehicle
                 if tipo == "Carro":
                     v = Carro(marca, modelo, preco, vel, combustivel, cor, eletrico, consumo)
                 elif tipo == "Mota":
