@@ -69,7 +69,7 @@ with tab_add:
             for key in ["tipo", "marca", "modelo", "preco", "vel", "combustivel", "cor", "eletrico", "consumo", "cilindrada"]:
                 if key in st.session_state:
                     del st.session_state[key]
-            st.experimental_rerun()
+            st.rerun()
 
 # ================= FROTA LIST =================
 with tab_frota:
