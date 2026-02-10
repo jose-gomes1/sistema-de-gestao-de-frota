@@ -62,7 +62,16 @@ with tab_add:
                 v = Veiculo(tipo, marca, modelo, preco, vel, combustivel, cor)
 
             frota.adicionar_veiculo(v)
+            # After adding vehicle
             st.success("✅ Veículo adicionado com sucesso!")
+            
+            # --- Show blocking JS alert ---
+            st.components.v1.html("""
+            <script>
+                alert("✅ Veículo adicionado com sucesso!");
+            </script>
+            """, height=0)
+
 
 # ================= FROTA LIST =================
 with tab_frota:
