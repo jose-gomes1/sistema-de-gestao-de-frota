@@ -42,7 +42,10 @@ with tab_add:
     vel = st.number_input("Velocidade", min_value=0, key="vel_add")
     combustivel = st.selectbox("Combustível", ["Gasolina", "Gasóleo"], key="comb_add")
     cor = st.color_picker("Cor", key="cor_add")
-    eletrico = st.checkbox("Elétrico", key="eletrico_add")
+
+    eletrico = False
+    if tipo == "Carro":
+        eletrico = st.checkbox("Elétrico", key="eletrico_add")  # Only for Carro
 
     consumo = None
     cilindrada = None
