@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 from frota import Frota
 from veiculo import Veiculo
 from carro import Carro
@@ -41,13 +40,7 @@ with tab_add:
     if tipo == "Mota":
         cilindrada = st.number_input("Cilindrada", min_value=0)
 
-    # --- Cooldown logic ---
-    last_add = st.session_state.get("last_add_time", 0)
-    can_add = (time.time() - last_add) >= 2
-
-    add_button = st.button("Adicionar", disabled=not can_add)
-
-    if add_button:
+    if st.button("Adicionar"):
         # -------- VALIDATION --------
         error_msg = None
         if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
@@ -70,9 +63,6 @@ with tab_add:
 
             frota.adicionar_veiculo(v)
             st.success("✅ Veículo adicionado com sucesso!")
-
-            # --- Set timestamp for cooldown ---
-            st.session_state["last_add_time"] = time.time()
 
 # ================= FROTA LIST =================
 with tab_frota:
