@@ -18,7 +18,6 @@ frota = get_frota()
 tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
 # ================= ADD =================
-
 # --- Initialize session state keys if they don't exist ---
 for key, default in {
     "tipo_add": "Veículo",
