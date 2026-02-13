@@ -1,13 +1,9 @@
 import sqlite3
 from pathlib import Path
-import os
+import streamlit as st
 
-# If /mount/data exists, use it (Streamlit Cloud)
-if Path("/mount/data").exists():
-    DB_DIR = Path("/mount/data")
-else:
-    DB_DIR = Path(__file__).parent
-
+# Use Streamlit persistent storage
+DB_DIR = Path("/mount/data")
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
 DB_PATH = DB_DIR / "frota.db"
