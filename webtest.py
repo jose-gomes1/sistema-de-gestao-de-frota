@@ -12,7 +12,6 @@ st.title("🚗 Gestão de Frota")
 @st.cache_resource
 def get_frota():
     return Frota()
-
 frota = get_frota()
 tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
