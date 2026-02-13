@@ -14,7 +14,6 @@ def get_frota():
     return Frota()
 
 frota = get_frota()
-
 tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
 # ================= ADD =================
