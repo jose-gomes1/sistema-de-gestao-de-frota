@@ -2,70 +2,60 @@ import streamlit as st
 import json
 import streamlit.components.v1 as components
 
-# ---------------- CONFIG ----------------
+# --------------------------------------------------
+# PAGE
+# --------------------------------------------------
 st.set_page_config("Gestão de Frota")
-st.title("🚗 Gestão de Frota (Client-side Persistente)")
+st.title("🚗 Gestão de Frota")
 
 FROTA_KEY = "frota_data"
 
-# ---------------- SESSION STATE ----------------
+# --------------------------------------------------
+# BOOTSTRAP localStorage → session_state
+# --------------------------------------------------
+components.html(
+    f"""
+    <script>
+    const key = "{FROTA_KEY}";
+    const data = localStorage.getItem(key) || "[]";
+
+    window.streamlitSessionState = window.streamlitSessionState || {{}};
+    window.streamlitSessionState.frota = JSON.parse(data);
+    </script>
+    """,
+    height=0,
+)
+
 if "frota" not in st.session_state:
     st.session_state.frota = []
 
 if "edit_id" not in st.session_state:
     st.session_state.edit_id = None
 
-# ---------------- LOAD FROM localStorage ----------------
-components.html(
-    f"""
-    <script>
-    const key = "{FROTA_KEY}";
-    let data = localStorage.getItem(key);
-    if (!data) {{
-        localStorage.setItem(key, JSON.stringify([]));
-        data = "[]";
-    }}
-    const event = new CustomEvent("STREAMLIT_DATA", {{
-        detail: JSON.parse(data)
-    }});
-    window.dispatchEvent(event);
-    </script>
-    """,
-    height=0,
-)
-
-components.html(
-    """
-    <script>
-    window.addEventListener("STREAMLIT_DATA", (e) => {
-        const out = document.getElementById("out");
-        out.value = JSON.stringify(e.detail);
-        out.dispatchEvent(new Event("change"));
-    });
-    </script>
-    <textarea id="out" style="display:none;"></textarea>
-    """,
-    height=0,
-)
-
-if "out" in st.session_state:
-    st.session_state.frota = json.loads(st.session_state.out)
-
-# ---------------- SAVE TO localStorage ----------------
-def save_frota():
+# --------------------------------------------------
+# SAVE helper
+# --------------------------------------------------
+def save():
     components.html(
         f"""
         <script>
-        localStorage.setItem("{FROTA_KEY}", JSON.stringify({json.dumps(st.session_state.frota)}));
+        localStorage.setItem(
+            "{FROTA_KEY}",
+            JSON.stringify({json.dumps(st.session_state.frota)})
+        );
         </script>
         """,
         height=0,
     )
 
-# ---------------- TABS ----------------
+# --------------------------------------------------
+# TABS
+# --------------------------------------------------
 tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
-# ================= ADD =================
+# ==================================================
+# ADD
+# ==================================================
 with tab_add:
     st.subheader("➕ Adicionar veículo")
 
@@ -92,12 +82,12 @@ with tab_add:
         cilindrada = st.number_input("Cilindrada (cc)", min_value=0)
 
     if st.button("Adicionar"):
-        if not marca.strip() or not modelo.strip() or preco <= 0 or vel <= 0:
+        if not marca or not modelo or preco <= 0 or vel <= 0:
             st.error("❌ Preencha todos os campos obrigatórios.")
-        elif tipo == "Carro" and eletrico and (not consumo or consumo <= 0):
-            st.error("❌ Informe o consumo do carro elétrico.")
-        elif tipo == "Mota" and (not cilindrada or cilindrada <= 0):
-            st.error("❌ Informe a cilindrada da mota.")
+        elif tipo == "Carro" and eletrico and consumo <= 0:
+            st.error("❌ Consumo inválido.")
+        elif tipo == "Mota" and cilindrada <= 0:
+            st.error("❌ Cilindrada inválida.")
         else:
             st.session_state.frota.append({
                 "id": max([v["id"] for v in st.session_state.frota], default=0) + 1,
@@ -110,13 +100,23 @@ with tab_add:
                 "cor": cor,
                 "eletrico": eletrico,
                 "consumo": consumo,
-                "cilindrada": cilindrada
+                "cilindrada": cilindrada,
+                "com_iva": False
             })
-            save_frota()
-            st.success("✅ Veículo guardado no browser")
+            save()
+
+            # ✅ ALERT
+            components.html(
+                "<script>alert('✅ Veículo adicionado com sucesso!');</script>",
+                height=0
+            )
+
+            # ✅ LIMPAR CAMPOS
             st.rerun()
 
-# ================= FROTA =================
+# ==================================================
+# FROTA
+# ==================================================
 with tab_frota:
     st.subheader("📋 Frota")
 
@@ -125,88 +125,55 @@ with tab_frota:
     else:
         for v in st.session_state.frota:
             with st.expander(f"#{v['id']} — {v['marca']} {v['modelo']}"):
-                st.write(f"**Tipo:** {v['tipo']}")
-                st.write(f"**Preço:** €{v['preco']:.2f}")
+                preco = v["preco"] * (1.10 if v["com_iva"] else 1)
+                st.write(f"**Preço:** €{preco:.2f}")
                 st.write(f"**Velocidade:** {v['vel']} km/h")
                 st.write(f"**Combustível:** {v['combustivel']}")
                 st.write(f"**Cor:** {v['cor']}")
 
-                if v["tipo"] == "Carro" and v.get("eletrico"):
+                if v["tipo"] == "Carro" and v["eletrico"]:
                     st.write(f"**Consumo:** {v['consumo']} kWh/100km")
 
                 if v["tipo"] == "Mota":
                     st.write(f"**Cilindrada:** {v['cilindrada']} cc")
 
-                col1, col2 = st.columns(2)
+                c1, c2, c3 = st.columns(3)
 
-                with col1:
-                    if st.button("✏️ Editar", key=f"edit_{v['id']}"):
+                with c1:
+                    if st.button("✏️ Editar", key=f"e{v['id']}"):
                         st.session_state.edit_id = v["id"]
 
-                with col2:
-                    if st.button("❌ Remover", key=f"del_{v['id']}"):
+                with c2:
+                    if st.button("💸 IVA 10%", key=f"iva{v['id']}"):
+                        v["com_iva"] = not v["com_iva"]
+                        save()
+                        st.rerun()
+
+                with c3:
+                    if st.button("❌ Remover", key=f"d{v['id']}"):
                         st.session_state.frota = [
                             x for x in st.session_state.frota if x["id"] != v["id"]
                         ]
-                        save_frota()
+                        save()
                         st.rerun()
 
-                # ---------- EDIT ----------
+                # ---------------- EDIT ----------------
                 if st.session_state.edit_id == v["id"]:
                     st.markdown("### ✏️ Editar veículo")
 
-                    emarca = st.text_input("Marca", v["marca"], key=f"m_{v['id']}")
-                    emodelo = st.text_input("Modelo", v["modelo"], key=f"mo_{v['id']}")
-                    epreco = st.number_input("Preço (€)", value=v["preco"], key=f"p_{v['id']}")
-                    evel = st.number_input("Velocidade", value=v["vel"], key=f"v_{v['id']}")
+                    emarca = st.text_input("Marca", v["marca"], key=f"m{v['id']}")
+                    emodelo = st.text_input("Modelo", v["modelo"], key=f"mo{v['id']}")
+                    epreco = st.number_input("Preço", value=v["preco"], key=f"p{v['id']}")
+                    evel = st.number_input("Velocidade", value=v["vel"], key=f"v{v['id']}")
 
-                    combustiveis = ["Gasolina", "Gasóleo"]
-                    if v["tipo"] == "Carro" and v["eletrico"]:
-                        combustiveis.append("Elétrico")
-
-                    ecomb = st.selectbox(
-                        "Combustível",
-                        combustiveis,
-                        index=combustiveis.index(v["combustivel"]),
-                        key=f"c_{v['id']}"
-                    )
-
-                    ecor = st.color_picker("Cor", v["cor"], key=f"cor_{v['id']}")
-
-                    econsumo = v.get("consumo")
-                    ecil = v.get("cilindrada")
-
-                    if v["tipo"] == "Carro" and ecomb == "Elétrico":
-                        econsumo = st.number_input(
-                            "Consumo (kWh/100km)",
-                            value=v["consumo"],
-                            key=f"cons_{v['id']}"
-                        )
-
-                    if v["tipo"] == "Mota":
-                        ecil = st.number_input(
-                            "Cilindrada (cc)",
-                            value=v["cilindrada"],
-                            key=f"cil_{v['id']}"
-                        )
-
-                    if st.button("💾 Guardar", key=f"save_{v['id']}"):
-                        if not emarca.strip() or not emodelo.strip() or epreco <= 0 or evel <= 0:
-                            st.error("❌ Campos inválidos.")
-                        else:
-                            for x in st.session_state.frota:
-                                if x["id"] == v["id"]:
-                                    x.update({
-                                        "marca": emarca,
-                                        "modelo": emodelo,
-                                        "preco": epreco,
-                                        "vel": evel,
-                                        "combustivel": ecomb,
-                                        "cor": ecor,
-                                        "consumo": econsumo,
-                                        "cilindrada": ecil
-                                    })
-                            st.session_state.edit_id = None
-                            save_frota()
-                            st.success("✅ Atualizado no browser")
-                            st.rerun()
+                    if st.button("💾 Guardar", key=f"s{v['id']}"):
+                        v.update({
+                            "marca": emarca,
+                            "modelo": emodelo,
+                            "preco": epreco,
+                            "vel": evel
+                        })
+                        st.session_state.edit_id = None
+                        save()
+                        st.success("✅ Atualizado!")
+                        st.rerun()
