@@ -4,23 +4,22 @@ from veiculo import Veiculo
 from carro import Carro
 from mota import Mota
 
-# ---------------------------------------------
+# -----------------------------
 # Página
-# ---------------------------------------------
+# -----------------------------
 st.set_page_config("Gestão de Frota")
 st.title("🚗 Gestão de Frota")
 
+# Inicializar frota
 frota = Frota()
 
-# ---------------------------------------------
-# Estado para editar
-# ---------------------------------------------
+# Estado para edição
 if "edit_id" not in st.session_state:
     st.session_state.edit_id = None
 
-# ---------------------------------------------
+# -----------------------------
 # Tabs
-# ---------------------------------------------
+# -----------------------------
 tab_add, tab_frota = st.tabs(["➕ Adicionar", "📋 Frota"])
 
 # ================= ADD =================
@@ -76,7 +75,6 @@ with tab_add:
                     height=0
                 )
 
-                st.success("Adicionado ✔️")
                 st.experimental_rerun()
 
 # ================= FROTA =================
@@ -103,17 +101,19 @@ with tab_frota:
 
                 col1, col2 = st.columns(2)
 
+                # EDIT
                 with col1:
                     if st.button("✏️ Editar", key=f"edit_{v['id']}"):
                         st.session_state.edit_id = v["id"]
 
+                # DELETE
                 with col2:
                     if st.button("❌ Remover", key=f"del_{v['id']}"):
                         frota.remover(v["id"])
                         st.success("🗑 Veículo removido!")
                         st.experimental_rerun()
 
-                # EDIT FORM
+                # ---------------- EDIT ----------------
                 if st.session_state.edit_id == v["id"]:
                     st.markdown("### ✏️ Editar veículo")
 
@@ -123,11 +123,56 @@ with tab_frota:
                     evel = st.number_input("Velocidade (km/h)", value=v["vel"], key=f"v_{v['id']}")
                     ecor = st.color_picker("Cor", v["cor"], key=f"cor_{v['id']}")
 
+                    # Combustível editável
+                    combustiveis = ["Gasolina", "Gasóleo"]
+                    if v["tipo"] == "Carro" and v["eletrico"]:
+                        combustiveis.append("Elétrico")
+
+                    ecomb = st.selectbox(
+                        "Combustível",
+                        options=combustiveis,
+                        index=combustiveis.index(v["combustivel"]),
+                        key=f"c_{v['id']}"
+                    )
+
+                    # Carro elétrico: consumo
+                    econsumo = v.get("consumo")
+                    if v["tipo"] == "Carro" and ecomb == "Elétrico":
+                        econsumo = st.number_input(
+                            "Consumo (kWh/100km)",
+                            value=v["consumo"] or 0.0,
+                            key=f"cons_{v['id']}"
+                        )
+
+                    # Mota: cilindrada
+                    ecil = v.get("cilindrada")
+                    if v["tipo"] == "Mota":
+                        ecil = st.number_input(
+                            "Cilindrada (cc)",
+                            value=v["cilindrada"] or 0,
+                            key=f"cil_{v['id']}"
+                        )
+
                     if st.button("💾 Guardar", key=f"save_{v['id']}"):
                         if not emarca.strip() or not emodelo.strip() or epreco <= 0 or evel <= 0:
                             st.error("❌ Preencha todos os campos obrigatórios.")
+                        elif v["tipo"] == "Carro" and ecomb == "Elétrico" and (econsumo is None or econsumo <= 0):
+                            st.error("❌ Informe o consumo para carro elétrico.")
+                        elif v["tipo"] == "Mota" and (ecil is None or ecil <= 0):
+                            st.error("❌ Informe a cilindrada para a mota.")
                         else:
-                            frota.atualizar(v["id"], emarca, emodelo, epreco, evel, v["combustivel"], ecor)
-                            st.success("✅ Alterações guardadas!")
+                            # Atualiza veículo
+                            frota.atualizar(
+                                v["id"],
+                                emarca,
+                                emodelo,
+                                epreco,
+                                evel,
+                                ecomb,
+                                ecor,
+                                consumo=econsumo,
+                                cilindrada=ecil
+                            )
+                            st.success("✅ Veículo atualizado!")
                             st.session_state.edit_id = None
                             st.experimental_rerun()
